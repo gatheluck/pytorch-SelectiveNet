@@ -8,6 +8,7 @@ import torch
 
 from selectivenet.vgg_variant import make_layers, cfgs
 from selectivenet.vgg_variant import vgg11_variant, vgg13_variant, vgg16_variant, vgg19_variant
+from selectivenet.model import SelectiveNet
 
 def test_make_layers():
     mode_length = {'A':33, 'B':41, 'D':53, 'E':65}
@@ -55,7 +56,62 @@ def test_vgg_variant():
     assert out.size(1)==512
     print(out.shape)
 
+def test_model():
+    x = torch.randn(16,3,32,32).cuda()
+
+    features = vgg11_variant(32,0.3).cuda()
+    model = SelectiveNet(features, 512, 10).cuda()
+    out_class, out_select, out_aux = model(x)
+    assert out_class.size(0)==16
+    assert out_class.size(1)==10
+    assert out_select.size(0)==16
+    assert out_select.size(1)==1
+    assert out_aux.size(0)==16
+    assert out_aux.size(1)==10
+    print('out_class', out_class.shape)
+    print('out_select', out_select.shape)
+    print('out_aux', out_aux.shape)
+
+    features = vgg13_variant(32,0.3).cuda()
+    model = SelectiveNet(features, 512, 10).cuda()
+    out_class, out_select, out_aux = model(x)
+    assert out_class.size(0)==16
+    assert out_class.size(1)==10
+    assert out_select.size(0)==16
+    assert out_select.size(1)==1
+    assert out_aux.size(0)==16
+    assert out_aux.size(1)==10
+    print('out_class', out_class.shape)
+    print('out_select', out_select.shape)
+    print('out_aux', out_aux.shape)
+
+    features = vgg16_variant(32,0.3).cuda()
+    model = SelectiveNet(features, 512, 10).cuda()
+    out_class, out_select, out_aux = model(x)
+    assert out_class.size(0)==16
+    assert out_class.size(1)==10
+    assert out_select.size(0)==16
+    assert out_select.size(1)==1
+    assert out_aux.size(0)==16
+    assert out_aux.size(1)==10
+    print('out_class', out_class.shape)
+    print('out_select', out_select.shape)
+    print('out_aux', out_aux.shape)
+
+    features = vgg19_variant(32,0.3).cuda()
+    model = SelectiveNet(features, 512, 10).cuda()
+    out_class, out_select, out_aux = model(x)
+    assert out_class.size(0)==16
+    assert out_class.size(1)==10
+    assert out_select.size(0)==16
+    assert out_select.size(1)==1
+    assert out_aux.size(0)==16
+    assert out_aux.size(1)==10
+    print('out_class', out_class.shape)
+    print('out_select', out_select.shape)
+    print('out_aux', out_aux.shape)
 
 if __name__ == '__main__':
     test_make_layers()
     test_vgg_variant()
+    test_model()

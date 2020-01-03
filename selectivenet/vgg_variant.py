@@ -45,7 +45,7 @@ class VggVariant(torch.nn.Module):
                 torch.nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
                 if m.bias is not None:
                     torch.nn.init.constant_(m.bias, 0)
-            elif isinstance(m, torch.nn.BatchNorm2d) or isinstance(m, torch.nn.BatchNorm1d):
+            elif isinstance(m, (torch.nn.BatchNorm1d, torch.nn.BatchNorm2d)):
                 torch.nn.init.constant_(m.weight, 1)
                 torch.nn.init.constant_(m.bias, 0)
             elif isinstance(m, torch.nn.Linear):

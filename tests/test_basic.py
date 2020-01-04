@@ -9,6 +9,7 @@ import torch
 from selectivenet.vgg_variant import make_layers, cfgs
 from selectivenet.vgg_variant import vgg11_variant, vgg13_variant, vgg16_variant, vgg19_variant
 from selectivenet.model import SelectiveNet
+from selectivenet.loss import SelectiveLoss
 
 def test_make_layers():
     mode_length = {'A':33, 'B':41, 'D':53, 'E':65}
@@ -111,7 +112,20 @@ def test_model():
     print('out_select', out_select.shape)
     print('out_aux', out_aux.shape)
 
+def test_selective_loss():
+    x = torch.randn(16,3,32,32).cuda()
+    features = vgg16_variant(32,0.3).cuda()
+    model = SelectiveNet(features, 512, 10).cuda()
+    out_class, out_select, out_aux = model(x)
+    target = torch.randint(0,9,(16,)).cuda()
+
+    loss_func = torch.nn.CrossEntropyLoss(reduction='none')
+    loss = SelectiveLoss(loss_func, coverage=0.7)(out_class, out_select, out_aux, target)
+    assert loss.size(0)==1
+    print('loss', loss)
+
 if __name__ == '__main__':
     test_make_layers()
     test_vgg_variant()
     test_model()
+    test_selective_loss()

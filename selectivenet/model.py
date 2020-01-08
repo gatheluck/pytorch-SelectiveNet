@@ -25,8 +25,8 @@ class SelectiveNet(torch.nn.Module):
         # represented as g() in the original paper
         self.selector = torch.nn.Sequential(
             torch.nn.Linear(self.dim_features, self.dim_features),
-            torch.nn.BatchNorm1d(self.dim_features),
             torch.nn.ReLU(True),
+            torch.nn.BatchNorm1d(self.dim_features),
             torch.nn.Linear(self.dim_features, 1),
             torch.nn.Sigmoid()
         )

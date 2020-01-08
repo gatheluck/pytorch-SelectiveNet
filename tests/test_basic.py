@@ -116,16 +116,32 @@ def test_selective_loss():
     x = torch.randn(16,3,32,32).cuda()
     features = vgg16_variant(32,0.3).cuda()
     model = SelectiveNet(features, 512, 10).cuda()
-    out_class, out_select, out_aux = model(x)
+    out_class, out_select, _ = model(x)
     target = torch.randint(0,9,(16,)).cuda()
 
     loss_func = torch.nn.CrossEntropyLoss(reduction='none')
-    loss = SelectiveLoss(loss_func, coverage=0.7)(out_class, out_select, out_aux, target)
+    loss, loss_dict = SelectiveLoss(loss_func, coverage=0.7)(out_class, out_select, target)
     assert loss.size(0)==1
     print('loss', loss)
+    print(loss_dict)
+
+def test_logger():
+    log_path_root = '/home/gatheluck/Scratch/selectivenet/logs'
+    log_basename = 'log_test_'+get_time_stamp('short')
+    log_path = os.path.join(log_path_root, log_basename)
+
+    logger = Logger(log_path)
+
+    log_dict  = {'loss01':1.0, 'loss02':2.0}
+    log_dict_ = {'loss01':1.0, 'loss03':3.0}
+    logger.log(log_dict, 1)
+    logger.log(log_dict, 2)
+    logger.log(log_dict, 3)
+    logger.log(log_dict_, 4)
 
 if __name__ == '__main__':
     test_make_layers()
     test_vgg_variant()
     test_model()
     test_selective_loss()
+    test_logger()

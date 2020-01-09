@@ -6,6 +6,7 @@ sys.path.append(base)
 
 import pandas
 from datetime import datetime
+from collections import OrderedDict
 
 from external.dada.misc import get_time_stamp
 
@@ -13,19 +14,21 @@ class Logger(object):
     """
     logger class for logging info to csv files.
     """
-    def __init__(self, path):
-        self.path = path
+    MODES = set(['train', 'val', 'test'])
 
-        if os.path.exists(self.path):
-            raise ValueError('specified path is already exists.')
-            #self.df = pandas.read_csv(self.path, index_col=0)
-        else:
-            self.df = pandas.DataFrame()
+    def __init__(self, path:str, mode:str):
+        if mode in self.MODES:
+            self.mode = mode
+        else: 
+            raise ValueError('mode is invalid')
+
+        self.path = path
+        self.df = pandas.DataFrame()
         self._save()
 
         self.row_idx = 0
 
-    def log(self, log_dict, step):
+    def log(self, log_dict, step=None):
         """
             step | time stamp | val01 | val02 | val03
         0
@@ -44,9 +47,11 @@ class Logger(object):
         time_stamp = get_time_stamp()
 
         # create data dict for adding new data to csv file
-        datadict = dict()
-        datadict['step'] = int(step)
+        datadict = OrderedDict()
+        if (self.mode=='train') or (self.mode=='val'):
+            datadict['step'] = int(step)
         datadict['time stamp'] = time_stamp
+
         for k,v in log_dict.items():
             datadict[k] = v
 

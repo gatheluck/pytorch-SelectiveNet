@@ -66,11 +66,11 @@ class Evaluator(object):
         assert h.size(0) == t.size(0) > 0
         assert len(h.size()) == len(t.size()) == 1
 
-        t  = torch.where(h==t, torch.ones_like(h), torch.zeros_like(h)).sum()
-        f = torch.where(h!=t, torch.ones_like(h), torch.zeros_like(h)).sum()
+        t = float(torch.where(h==t, torch.ones_like(h), torch.zeros_like(h)).sum())
+        f = float(torch.where(h!=t, torch.ones_like(h), torch.zeros_like(h)).sum())
 
         # raw accuracy
-        acc = t/(t+f+1e-12)
+        acc = float(t/(t+f+1e-12))
         return OrderedDict({'accuracy':acc})
 
     def _evaluate_multi_classification_with_rejection(self, h:torch.tensor, t:torch.tensor, r_binary:torch.tensor):
@@ -95,10 +95,10 @@ class Evaluator(object):
         h_rjc = torch.masked_select(h, r_binary.bool())
         t_rjc = torch.masked_select(t, r_binary.bool())
 
-        t = torch.where(h_rjc==t_rjc, torch.ones_like(h_rjc), torch.zeros_like(h_rjc)).sum()
-        f = torch.where(h_rjc!=t_rjc, torch.ones_like(h_rjc), torch.zeros_like(h_rjc)).sum()
+        t = float(torch.where(h_rjc==t_rjc, torch.ones_like(h_rjc), torch.zeros_like(h_rjc)).sum())
+        f = float(torch.where(h_rjc!=t_rjc, torch.ones_like(h_rjc), torch.zeros_like(h_rjc)).sum())
         # accuracy
-        acc = t/(t+f+1e-12)
+        acc = float(t/(t+f+1e-12))
         eval_dict['accuracy'] = acc
 
         return eval_dict
@@ -131,17 +131,17 @@ class Evaluator(object):
 
         assert (true_pos + true_neg + false_pos + false_neg)==torch.ones_like(true_pos)
 
-        tp = true_pos.sum()
-        tn = true_neg.sum()
-        fp = false_pos.sum()
-        fn = false_neg.sum()
+        tp = float(true_pos.sum())
+        tn = float(true_neg.sum())
+        fp = float(false_pos.sum())
+        fn = float(false_neg.sum())
 
         # accuracy, precision, recall
-        acc = (tp+tn)/(tp+tn+fp+fn+1e-12)
-        pre = tp/(tp+fp+1e-12)
-        rec = tp/(tp+fn+1e-12)
+        acc = float((tp+tn)/(tp+tn+fp+fn+1e-12))
+        pre = float(tp/(tp+fp+1e-12))
+        rec = float(tp/(tp+fn+1e-12))
 
-        return OrderedDict(accuracy=acc, precision=pre, recall=rec)
+        return OrderedDict({'accuracy':acc, 'precision':pre, 'recall':rec})
 
 
     def _evaluate_rejection(self, h:torch.tensor, t:torch.tensor, r_binary:torch.tensor):
@@ -166,14 +166,14 @@ class Evaluator(object):
         condition_rjc = (r_binary==torch.zeros_like(r_binary))
 
         # TP, TN, FP, FN
-        ta = torch.where(condition_true & condition_acc, torch.ones_like(h), torch.zeros_like(h)).sum()
-        tr = torch.where(condition_true & condition_rjc, torch.ones_like(h), torch.zeros_like(h)).sum()
-        fa = torch.where(condition_false & condition_acc, torch.ones_like(h), torch.zeros_like(h)).sum()
-        fr = torch.where(condition_false & condition_rjc, torch.ones_like(h), torch.zeros_like(h)).sum()
+        ta = float(torch.where(condition_true & condition_acc, torch.ones_like(h), torch.zeros_like(h)).sum())
+        tr = float(torch.where(condition_true & condition_rjc, torch.ones_like(h), torch.zeros_like(h)).sum())
+        fa = float(torch.where(condition_false & condition_acc, torch.ones_like(h), torch.zeros_like(h)).sum())
+        fr = float(torch.where(condition_false & condition_rjc, torch.ones_like(h), torch.zeros_like(h)).sum())
 
         # accuracy, precision, recall
-        rejection_rate = (tr+fr)/(ta+tr+fa+fr+1e-12)
-        rejection_pre = tr/(tr+fr+1e-12)
+        rejection_rate = float((tr+fr)/(ta+tr+fa+fr+1e-12))
+        rejection_pre  = float(tr/(tr+fr+1e-12))
 
         return OrderedDict({'rejection rate':rejection_rate, 'rejection precision':rejection_pre}) 
 
@@ -186,7 +186,7 @@ if __name__ == '__main__':
     # dataset
     dataset_builder = DatasetBuilder(name='cifar10', root_path='../data')
     test_dataset   = dataset_builder(train=False, normalize=True)
-    test_loader    = torch.utils.data.DataLoader(test_dataset, batch_size=8, shuffle=False, num_workers=16, pin_memory=True)
+    test_loader    = torch.utils.data.DataLoader(test_dataset, batch_size=32, shuffle=False, num_workers=16, pin_memory=True)
 
     # model
     features = vgg16_variant(dataset_builder.input_size, 0.3).cuda()
@@ -211,7 +211,7 @@ if __name__ == '__main__':
             eval_dict = OrderedDict()
             eval_dict.update(evaluator())
             print(eval_dict)
-            raise NotImplementedError
+            
 
 
             

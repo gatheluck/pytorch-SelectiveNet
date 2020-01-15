@@ -23,9 +23,25 @@ python train.py --dataset cifar10 --log_dir ../logs/train --coverage 0.7
 ### Testing
 Use `scripts/test.py` to test the network. Example usage:
 ```bash
-# Example usage
+# Example usage (test single weight)
 cd scripts
 python test.py --dataset cifar10 --weight ${path_to_saved_weight} --coverage 0.7
+
+# Example usage (test multiple weights)
+cd scripts
+python experiments/test_multi.py -t ${path_to_root_dir_of_saved_weights} -d cifar10
+```
+
+### Plot Results
+Use `scripts/plot.py` to plot the result. Example usage:
+```bash
+# Example usage (plot test result)
+cd scripts
+python plot.py -t ${path_to_test.csv} -x coverage --plot_test
+
+# Example usage (plot all training logs)
+cd scripts
+python experiments/plot_multi.py -t ${path_to_test.csv} -x step --plot_all
 ```
 
 ## References

@@ -20,6 +20,7 @@ from selectivenet.vgg_variant import vgg16_variant
 from selectivenet.model import SelectiveNet
 from selectivenet.loss import SelectiveLoss
 from selectivenet.data import DatasetBuilder
+from selectivenet.evaluator import Evaluator
 
 # options
 @click.command()
@@ -83,10 +84,13 @@ def test(**kwargs):
             ce_loss = torch.nn.CrossEntropyLoss()(out_aux, t)
             ce_loss *= (1.0 - FLAGS.alpha)
             loss_dict['ce_loss'] = ce_loss.detach().cpu().item()
-            
             # total loss
             loss = selective_loss + ce_loss
             loss_dict['loss'] = loss.detach().cpu().item()
+
+            # evaluation
+            evaluator = Evaluator(out_class.detach(), t.detach(), out_select.detach())
+            loss_dict.update(evaluator())
 
             test_metric_dict.update(loss_dict)
 

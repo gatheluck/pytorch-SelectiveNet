@@ -53,8 +53,3 @@ if __name__ == '__main__':
     metric_dict.update(loss_dict_01)
     metric_dict.update(loss_dict_02)
     print(metric_dict.avg)
-
-
-
-
-       

@@ -16,7 +16,8 @@ from external.dada.flag_holder import FlagHolder
 @click.option('-t', '--target_path', type=str, required=True)
 @click.option('-x', type=str, required=True)
 @click.option('-y', type=str, default='')
-@click.option('-a', '--plot_all', is_flag=True, default=False, help='plot all in single image')
+@click.option('--plot_all', is_flag=True, default=False, help='plot all in single image')
+@click.option('--plot_test', is_flag=True, default=False, help='plot test.csv file')
 @click.option('-l', '--log_path', type=str, default='', help='path of log')
 @click.option('-s', '--save', is_flag=True, default=False, help='save results')
 
@@ -33,15 +34,33 @@ def plot(**kwargs):
     FLAGS.initialize(**kwargs)
     FLAGS.summary()
 
+    if (FLAGS.plot_all is True) and (FLAGS.plot_test is True):
+        raise ValueError('invalid option. either "plot_all" or "plot_test" should be True.')
+
     # load csv file and plot
     df = pd.read_csv(FLAGS.target_path)
 
-    # plot all variable
+    # plot all variable. this is basically used for visualize training log.
     if FLAGS.plot_all:
         # ignore some columns
         ignore_columns = ['Unnamed: 0', 'time stamp', 'step', FLAGS.x]
         column_names = [column for column in df.columns if column not in ignore_columns]
         
+        # create figure
+        fig = plt.figure(figsize=(4*len(column_names),3))
+
+        for i, column_name in enumerate(column_names):
+            ax = fig.add_subplot(1, len(column_names), i+1)
+            sns.lineplot(x=FLAGS.x, y=column_name, ci="sd", data=df)
+                
+        plt.tight_layout()
+
+    # plot test.csv file. 
+    elif FLAGS.plot_test:
+        # ignore some columns
+        ignore_columns = ['Unnamed: 0', 'time stamp', 'path', 'loss', 'selective_loss', FLAGS.x]
+        column_names = [column for column in df.columns if column not in ignore_columns]
+
         # create figure
         fig = plt.figure(figsize=(4*len(column_names),3))
 

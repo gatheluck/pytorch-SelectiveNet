@@ -32,8 +32,9 @@ def print_metric_dict(epoch, num_epochs, metric_dict:dict, reverse:bool=True, ov
     sys.stdout.flush()
 
 
-def load_model(model, path):
+def load_model(model, path, orator=True):
     model.load_state_dict(torch.load(path))
+    if orator: print('>>> Model was loaded from "{}"'.format(path))
 
 def save_model(model, path, orator=True):
     torch.save(

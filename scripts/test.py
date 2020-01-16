@@ -101,7 +101,7 @@ def test(**kwargs):
         loss_dict = OrderedDict()
 
         # adversarial samples
-        if FLAGS.attack:
+        if FLAGS.attack and FLAGS.eps_max>0:
             # create adversarial sampels
             model.zero_grad()
             x = attacker(model, x.detach(), t.detach())

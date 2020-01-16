@@ -14,6 +14,7 @@ from external.dada.flag_holder import FlagHolder
 from external.dada.metric import MetricDict
 from external.dada.io import print_metric_dict
 from external.dada.io import save_model
+from external.dada.io import load_model
 from external.dada.logger import Logger
 
 from selectivenet.vgg_variant import vgg16_variant
@@ -54,6 +55,7 @@ def test(**kwargs):
     # model
     features = vgg16_variant(dataset_builder.input_size, FLAGS.dropout_prob).cuda()
     model = SelectiveNet(features, FLAGS.dim_features, dataset_builder.num_classes).cuda()
+    load_model(model, FLAGS.weight)
 
     if torch.cuda.device_count() > 1: model = torch.nn.DataParallel(model)
 

@@ -60,7 +60,7 @@ def plot_multi(**kwargs):
 
         # add flag command
         if FLAGS.plot_all:
-            cmd += ' -a'
+            cmd += ' --plot_all'
 
         subprocess.run(cmd.split(), cwd=run_dir)
 

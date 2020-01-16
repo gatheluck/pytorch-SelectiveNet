@@ -54,11 +54,14 @@ def main(**kwargs):
 
 def test(**kwargs):
     """
-    test 
+    test model on specific coverage and specific adversarial perturbation.
     """
     FLAGS = FlagHolder()
     FLAGS.initialize(**kwargs)
     FLAGS.summary()
+
+    assert FLAGS.nb_its>0
+    assert FLAGS.eps_max>=0
 
     # dataset
     dataset_builder = DatasetBuilder(name=FLAGS.dataset, root_path=FLAGS.dataroot)
@@ -81,6 +84,7 @@ def test(**kwargs):
         # get step_size
         if not FLAGS.step_size:
             FLAGS.step_size = get_step_size(FLAGS.eps_max, FLAGS.nb_its)
+        assert FLAGS.step_size>=0
 
         # create attacker
         if FLAGS.attack=='pgd':

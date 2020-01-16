@@ -16,6 +16,8 @@ from external.dada.io import print_metric_dict
 from external.dada.io import save_model
 from external.dada.io import load_model
 from external.dada.logger import Logger
+from external.advex_uar.advex_uar.attacks.pgd_attack import PGDAttackVariant
+from external.advex_uar.advex_uar.common.pyt_common import get_step_size
 
 from selectivenet.vgg_variant import vgg16_variant
 from selectivenet.model import SelectiveNet
@@ -38,11 +40,22 @@ from selectivenet.evaluator import Evaluator
 # loss
 @click.option('--coverage', type=float, required=True)
 @click.option('--alpha', type=float, default=0.5, help='balancing parameter between selective_loss and ce_loss')
+# adversarial attack
+@click.option('--attack', type=str, default=None)
+@click.option('--nb_its', type=int, default=10)
+@click.option('--eps_max', type=float, default=0.0)
+@click.option('--step_size', type=float, default=None)
+@click.option('--norm', type=str, default='linf')
+@click.option('--mode', type=str, default='both')
+
 
 def main(**kwargs):
     test(**kwargs)
 
 def test(**kwargs):
+    """
+    test 
+    """
     FLAGS = FlagHolder()
     FLAGS.initialize(**kwargs)
     FLAGS.summary()
@@ -61,31 +74,53 @@ def test(**kwargs):
 
     # loss
     base_loss = torch.nn.CrossEntropyLoss(reduction='none')
-    SelectiveCELoss = SelectiveLoss(base_loss, coverage=FLAGS.coverage)
-   
+    criterion_selective = SelectiveLoss(base_loss, coverage=FLAGS.coverage)
+
+    # adversarial attack
+    if FLAGS.attack:
+        # get step_size
+        if not FLAGS.step_size:
+            FLAGS.step_size = get_step_size(FLAGS.eps_max, FLAGS.nb_its)
+
+        # create attacker
+        if FLAGS.attack=='pgd':
+            attacker = PGDAttackVariant(
+                        FLAGS.nb_its, FLAGS.eps_max, FLAGS.step_size, dataset=FLAGS.dataset, 
+                        coverage=FLAGS.coverage, norm=FLAGS.norm, mode=FLAGS.mode)
+        else:
+            raise NotImplementedError('invalid attack method.')
+    
     # pre epoch
     test_metric_dict = MetricDict()
 
     # test
-    with torch.autograd.no_grad():
-        for i, (x,t) in enumerate(test_loader):
-            model.eval()
-            x = x.to('cuda', non_blocking=True)
-            t = t.to('cuda', non_blocking=True)
+    for i, (x,t) in enumerate(test_loader):
+        model.eval()
+        x = x.to('cuda', non_blocking=True)
+        t = t.to('cuda', non_blocking=True)
+        loss_dict = OrderedDict()
 
+        # adversarial samples
+        if FLAGS.attack:
+            # create adversarial sampels
+            model.zero_grad()
+            x = attacker(model, x.detach(), t.detach())
+
+        with torch.autograd.no_grad():
+            model.zero_grad()
             # forward
             out_class, out_select, out_aux = model(x)
-
+            
             # compute selective loss
-            loss_dict = OrderedDict()
-            # loss dict includes, 'empirical_risk' / 'emprical_coverage' / 'penulty'
-            selective_loss, loss_dict = SelectiveCELoss(out_class, out_select, t)
+            selective_loss, loss_dict = criterion_selective(out_class, out_select, t)
             selective_loss *= FLAGS.alpha
             loss_dict['selective_loss'] = selective_loss.detach().cpu().item()
+
             # compute standard cross entropy loss
             ce_loss = torch.nn.CrossEntropyLoss()(out_aux, t)
             ce_loss *= (1.0 - FLAGS.alpha)
             loss_dict['ce_loss'] = ce_loss.detach().cpu().item()
+
             # total loss
             loss = selective_loss + ce_loss
             loss_dict['loss'] = loss.detach().cpu().item()
@@ -94,7 +129,7 @@ def test(**kwargs):
             evaluator = Evaluator(out_class.detach(), t.detach(), out_select.detach())
             loss_dict.update(evaluator())
 
-            test_metric_dict.update(loss_dict)
+        test_metric_dict.update(loss_dict)
 
     # post epoch
     print_metric_dict(None, None, test_metric_dict.avg, mode='test')

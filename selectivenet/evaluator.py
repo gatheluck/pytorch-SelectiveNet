@@ -13,14 +13,17 @@ class Evaluator(object):
     def __init__(self, prediction_out, t, selection_out=None, selection_threshold:float=0.5):
         """
         Args:
-            prediction_out (B, #class):
-            t (B):  
-            selection_out (B, 1)
+            prediction_out (B, #class): prediction logit.
+            t (B):                      target label.
+            selection_out (B, 1):       selection (rejection) logit.
         """
         assert 0<=selection_threshold<=1.0
 
+        # classification results
         self.prediction_result = prediction_out.argmax(dim=1) # (B)
         self.t = t.detach() # (B)
+
+        # selection results
         if selection_out is not None:
             condition = (selection_out >= selection_threshold)
             self.selection_result = torch.where(condition, torch.ones_like(selection_out), torch.zeros_like(selection_out)).view(-1) # (B)
@@ -29,13 +32,13 @@ class Evaluator(object):
 
     def __call__(self):
         """
-        add 'accuracy (Acc)', 'precision (Pre)', 'recall (Rec)' to metric_dict. 
-        if selection_out is not None, 'rejection rate (RR)' and 'precision of rejection (PR)' are added.
-        
-        Args:
-            metric_dict
+        compute 'accuracy (Acc)', 'precision (Pre)', 'recall (Rec)'. 
+        if selection_out is not None, 'rejection rate (RR)' and 'rejection precision (PR)' are added.
+
+        Return:
+            eval_dict: dict which include evaluation result.
         """
-        eval_dict = OrderedDict()
+        eval_dict = dict()
 
         if self.selection_result is None:
             # add evaluation for classification

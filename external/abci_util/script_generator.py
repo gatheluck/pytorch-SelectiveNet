@@ -21,11 +21,11 @@ def generate_script(cmd:str, script_path:str, run_dir:str, abci_log_dir:str, ex_
         f.write('#$ -N {name}\n'.format(name=name))
         f.write('#$ -o {log_path}\n\n'.format(log_path=log_path))
 
-        f.write('export PATH=/home/{user}/miniconda3/bin:\${PATH}\n'.format(user=user, PATH='{PATH}'))
+        f.write('export PATH=/home/{user}/miniconda3/bin:${PATH}\n'.format(user=user, PATH='{PATH}'))
         f.write('source activate {env}\n\n'.format(env=env))
         
-        f.write('export PATH=/apps/gcc/7.3.0/bin:\${PATH}\n'.format(PATH='{PATH}'))
-        f.write('export LD_LIBRARY_PATH=/apps/gcc/7.3.0/lib64:\${LD_LIBRARY_PATH}\n\n'.format(LD_LIBRARY_PATH='{LD_LIBRARY_PATH}'))
+        f.write('export PATH=/apps/gcc/7.3.0/bin:${PATH}\n'.format(PATH='{PATH}'))
+        f.write('export LD_LIBRARY_PATH=/apps/gcc/7.3.0/lib64:${LD_LIBRARY_PATH}\n\n'.format(LD_LIBRARY_PATH='{LD_LIBRARY_PATH}'))
         
         f.write('source /etc/profile.d/modules.sh\n')
         f.write('module load singularity/2.6.1\n')

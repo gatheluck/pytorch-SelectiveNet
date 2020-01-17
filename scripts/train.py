@@ -15,6 +15,8 @@ from external.dada.metric import MetricDict
 from external.dada.io import print_metric_dict
 from external.dada.io import save_model
 from external.dada.logger import Logger
+from external.advex_uar.advex_uar.attacks.pgd_attack import PGDAttackVariant
+from external.advex_uar.advex_uar.common.pyt_common import get_step_size
 
 from selectivenet.vgg_variant import vgg16_variant
 from selectivenet.model import SelectiveNet
@@ -41,6 +43,13 @@ from selectivenet.evaluator import Evaluator
 # loss
 @click.option('--coverage', type=float, required=True)
 @click.option('--alpha', type=float, default=0.5, help='balancing parameter between selective_loss and ce_loss')
+# at
+@click.option('--at', type=str, default=None)
+@click.option('--nb_its', type=int, default=20, help='number of iterations. 20 is the same as Madry et. al., 2018.')
+@click.option('--at_eps', type=float, default=0.0)
+@click.option('--step_size', type=float, default=None)
+@click.option('--at_norm', type=str, default=None)
+@click.option('--at_trg_loss', type=str, default='both')
 # logging
 @click.option('-s', '--suffix', type=str, default='')
 @click.option('-l', '--log_dir', type=str, required=True)
@@ -53,6 +62,7 @@ def train(**kwargs):
     FLAGS = FlagHolder()
     FLAGS.initialize(**kwargs)
     FLAGS.summary()
+    os.makedirs(FLAGS.log_dir, exist_ok=True)
     FLAGS.dump(path=os.path.join(FLAGS.log_dir, 'flags{}.json'.format(FLAGS.suffix)))
 
     # dataset
@@ -76,6 +86,21 @@ def train(**kwargs):
     base_loss = torch.nn.CrossEntropyLoss(reduction='none')
     SelectiveCELoss = SelectiveLoss(base_loss, coverage=FLAGS.coverage)
 
+    # attacker
+    if FLAGS.at and FLAGS.at_eps>0:
+        # get step_size
+        if not FLAGS.step_size:
+            FLAGS.step_size = get_step_size(FLAGS.at_eps, FLAGS.nb_its)
+        assert FLAGS.step_size>=0
+
+        # create attacker
+        if FLAGS.at=='pgd':
+            attacker = PGDAttackVariant(
+                        FLAGS.nb_its, FLAGS.at_eps, FLAGS.step_size, dataset=FLAGS.dataset, 
+                        coverage=FLAGS.coverage, norm=FLAGS.at_norm, trg_loss=FLAGS.attack_trg_loss)
+        else:
+            raise NotImplementedError('invalid at method.')
+
     # logger
     train_logger = Logger(path=os.path.join(FLAGS.log_dir,'train_log{}.csv'.format(FLAGS.suffix)), mode='train')
     val_logger   = Logger(path=os.path.join(FLAGS.log_dir,'val_log{}.csv'.format(FLAGS.suffix)), mode='val')
@@ -87,11 +112,18 @@ def train(**kwargs):
 
         # train
         for i, (x,t) in enumerate(train_loader):
-            model.train()
             x = x.to('cuda', non_blocking=True)
             t = t.to('cuda', non_blocking=True)
 
+            # adversarial attack
+            if FLAGS.at and FLAGS.at_eps>0:
+                model.eval()
+                model.zero_grad()
+                x = attacker(model, x.detach(), t.detach())
+
             # forward
+            model.train()
+            model.zero_grad()
             out_class, out_select, out_aux = model(x)
 
             # compute selective loss
@@ -117,13 +149,20 @@ def train(**kwargs):
             train_metric_dict.update(loss_dict)
         
         # validation
-        with torch.autograd.no_grad():
-            for i, (x,t) in enumerate(val_loader):
-                model.eval()
-                x = x.to('cuda', non_blocking=True)
-                t = t.to('cuda', non_blocking=True)
+        for i, (x,t) in enumerate(val_loader):
+            x = x.to('cuda', non_blocking=True)
+            t = t.to('cuda', non_blocking=True)
 
+            # adversarial attack
+            if FLAGS.at and FLAGS.at_eps>0:
+                model.eval()
+                model.zero_grad()
+                x = attacker(model, x.detach(), t.detach())
+
+            with torch.autograd.no_grad():
                 # forward
+                model.eval()
+                model.zero_grad()
                 out_class, out_select, out_aux = model(x)
 
                 # compute selective loss

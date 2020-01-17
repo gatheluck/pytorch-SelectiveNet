@@ -17,7 +17,8 @@ from external.abci_util.script_generator import generate_script
 @click.option('-d', '--dataset', type=str, required=True)
 @click.option('--dataroot', type=str, default='../data', help='path to dataset root')
 # optimization
-@click.option('--num_epochs', type=int, default=300)
+@click.option('--num_epochs', type=int, default=200)
+@click.option('-N', '--batch_size', type=int, default=1024)
 # logging
 @click.option('-l', '--log_dir', type=str, required=True)
 @click.option('--ex_id', type=str, default=uuid.uuid4().hex, help='id of the experiments')
@@ -69,6 +70,7 @@ def train_multi(**kwargs):
                           -d {dataset} \
                           --dataroot {dataroot} \
                           --num_epochs {num_epochs} \
+                          --batch_size {batch_size} \
                           --coverage {coverage} \
                           --at {at} \
                           --nb_its {nb_its} \
@@ -79,6 +81,7 @@ def train_multi(**kwargs):
                             dataset=FLAGS.dataset,
                             dataroot=FLAGS.dataroot,
                             num_epochs=FLAGS.num_epochs,
+                            batch_size=FLAGS.batch_size,
                             coverage=coverage,
                             at=at,
                             nb_its=FLAGS.nb_its,

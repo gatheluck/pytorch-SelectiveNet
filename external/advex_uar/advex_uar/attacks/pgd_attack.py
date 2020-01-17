@@ -20,7 +20,7 @@ class PGDAttackVariant(AttackWrapper):
     PGD Attack variant for prediction with rejection.
 
     """
-    def __init__(self, nb_its, eps_max, step_size, dataset, coverage, norm='linf', rand_init=True, scale_each=False, mode='both'):
+    def __init__(self, nb_its, eps_max, step_size, dataset, coverage, norm='linf', rand_init=True, scale_each=False, trg_loss='both'):
         """
         Parameters:
             nb_its (int):          Number of PGD iterations.
@@ -31,9 +31,9 @@ class PGDAttackVariant(AttackWrapper):
             norm (str):            Either 'linf' or 'l2'
             rand_init (bool):      Whether to init randomly in the norm ball
             scale_each (bool):     Whether to scale eps for each image in a batch separately
-            mode (str):            Attack mode 
+            trg_loss (str):        Attack target loss 
         """
-        if mode not in ['both', 'rjc', 'cls']:
+        if trg_loss not in ['both', 'rjc', 'cls']:
             raise ValueError 
 
         super().__init__(dataset)
@@ -46,7 +46,7 @@ class PGDAttackVariant(AttackWrapper):
         self.scale_each = scale_each
 
         self.coverage = coverage
-        self.mode = mode
+        self.trg_loss = trg_loss
         self.nb_backward_steps = self.nb_its
         
     def _run_one(self, pixel_model, pixel_inp, delta, target, eps, step_size, avoid_target=True):
@@ -65,9 +65,9 @@ class PGDAttackVariant(AttackWrapper):
             # compute standard cross entropy loss
             ce_loss = torch.nn.CrossEntropyLoss()(out_aux, target)
 
-            if self.mode == 'rjc':
+            if self.trg_loss == 'rjc':
                 loss = selective_loss
-            elif self.mode == 'cls':
+            elif self.trg_loss == 'cls':
                 loss = ce_loss
             else: # both
                 loss = (0.5*selective_loss) + (0.5*ce_loss)
@@ -170,7 +170,7 @@ if __name__ == '__main__':
     if torch.cuda.device_count() > 1: model = torch.nn.DataParallel(model)
 
     # attacker
-    attacker = PGDAttackVariant(10, 32, 30, 'cifar10', coverage=0.7, mode='both')
+    attacker = PGDAttackVariant(10, 32, 30, 'cifar10', coverage=0.7, trg_loss='both')
 
     # test
     for i, (x,t) in enumerate(test_loader):

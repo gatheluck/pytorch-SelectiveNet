@@ -35,7 +35,7 @@ EPS = {
 @click.option('--attack_trg_loss', type=str, required=True)
 
 def main(**kwargs):
-    test_multi(**kwargs)
+    test_multi_adv(**kwargs)
 
 def parse_weight_basename(weight_basename):
     ret_dict = dict()
@@ -51,7 +51,7 @@ def parse_weight_basename(weight_basename):
     # *  : sequence more than zero time
 
     # 'weight_final_coverage_{coverage}_{else}'
-    pattern = r'weight_final_coverage_(\d.\d+)_(.*)'
+    pattern = r'weight_final_coverage-(\d.\d+)_(.*)'
     result = re.match(pattern, basename)
 
     ret_dict['coverage'] = float(result.group(1))
@@ -73,7 +73,7 @@ def parse_weight_basename(weight_basename):
         
     return ret_dict
 
-def test_multi(**kwargs):
+def test_multi_adv(**kwargs):
     """
     this script loads all 'weight_final_{something}.pth' files which exisits under 'kwargs.target_dir' and execute test.
     if there is exactly same file, the result becomes the mean of them.

@@ -20,7 +20,7 @@ cd scripts
 python train.py --dataset cifar10 --log_dir ../logs/train --coverage 0.7 
 ```
 
-We also provide training script generator by [ABCI](https://abci.ai/) which is the world's first large-scale open AI computing infrastructure.
+We also provide cript generator for training by [ABCI](https://abci.ai/) which is the world's first large-scale open AI computing infrastructure.
 Use `scripts/experiments/train_abci.py` to generate shell scripts for ABCI. 
 Example usage:
 ```bash

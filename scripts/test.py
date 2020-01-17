@@ -43,10 +43,10 @@ from selectivenet.evaluator import Evaluator
 # adversarial attack
 @click.option('--attack', type=str, default=None)
 @click.option('--nb_its', type=int, default=10)
-@click.option('--eps_max', type=float, default=0.0)
 @click.option('--step_size', type=float, default=None)
-@click.option('--norm', type=str, default='linf')
-@click.option('--mode', type=str, default='both')
+@click.option('--attack_eps', type=float, default=0.0)
+@click.option('--attack_norm', type=str, default=None)
+@click.option('--attack_trg_loss', type=str, default=None)
 
 
 def main(**kwargs):
@@ -61,7 +61,7 @@ def test(**kwargs):
     FLAGS.summary()
 
     assert FLAGS.nb_its>0
-    assert FLAGS.eps_max>=0
+    assert FLAGS.attack_eps>=0
 
     # dataset
     dataset_builder = DatasetBuilder(name=FLAGS.dataset, root_path=FLAGS.dataroot)
@@ -83,14 +83,14 @@ def test(**kwargs):
     if FLAGS.attack:
         # get step_size
         if not FLAGS.step_size:
-            FLAGS.step_size = get_step_size(FLAGS.eps_max, FLAGS.nb_its)
+            FLAGS.step_size = get_step_size(FLAGS.attack_eps, FLAGS.nb_its)
         assert FLAGS.step_size>=0
 
         # create attacker
         if FLAGS.attack=='pgd':
             attacker = PGDAttackVariant(
-                        FLAGS.nb_its, FLAGS.eps_max, FLAGS.step_size, dataset=FLAGS.dataset, 
-                        coverage=FLAGS.coverage, norm=FLAGS.norm, mode=FLAGS.mode)
+                        FLAGS.nb_its, FLAGS.attack_eps, FLAGS.step_size, dataset=FLAGS.dataset, 
+                        coverage=FLAGS.coverage, norm=FLAGS.attack_norm, trg_loss=FLAGS.attack_trg_loss)
         else:
             raise NotImplementedError('invalid attack method.')
     
@@ -105,7 +105,7 @@ def test(**kwargs):
         loss_dict = OrderedDict()
 
         # adversarial samples
-        if FLAGS.attack and FLAGS.eps_max>0:
+        if FLAGS.attack and FLAGS.attack_eps>0:
             # create adversarial sampels
             model.zero_grad()
             x = attacker(model, x.detach(), t.detach())

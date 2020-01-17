@@ -97,7 +97,7 @@ def train(**kwargs):
         if FLAGS.at=='pgd':
             attacker = PGDAttackVariant(
                         FLAGS.nb_its, FLAGS.at_eps, FLAGS.step_size, dataset=FLAGS.dataset, 
-                        coverage=FLAGS.coverage, norm=FLAGS.at_norm, trg_loss=FLAGS.attack_trg_loss)
+                        coverage=FLAGS.coverage, norm=FLAGS.at_norm, trg_loss=FLAGS.at_trg_loss)
         else:
             raise NotImplementedError('invalid at method.')
 

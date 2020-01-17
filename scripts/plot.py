@@ -93,10 +93,14 @@ def plot(**kwargs):
         df = df[df['attack_trg_loss']==FLAGS.attack_trg_loss] # both / cls / rjc
 
         if not FLAGS.coverage and (FLAGS.at_eps and FLAGS.attack_eps):
-            df = df[df['at_eps']==FLAGS.at_eps & df['attack_eps']==FLAGS.attack_eps]
-        elif not FLAGS.at_eps and (FLAGS.eps and FLAGS.coverage):
-            df = df[df['attack_eps']==FLAGS.attack_eps & df['coverage']==FLAGS.coverage]
-        elif not FLAGS.eps and (FLAGS.coverage and FLAGS.at_eps):
+            df = df[df['at_eps']==FLAGS.at_eps]
+            df = df[df['attack_eps']==FLAGS.attack_eps]
+
+        elif not FLAGS.at_eps and (FLAGS.attack_eps and FLAGS.coverage):
+            df = df[df['attack_eps']==FLAGS.attack_eps]
+            df = df[df['coverage']==FLAGS.coverage]
+
+        elif not FLAGS.attack_eps and (FLAGS.coverage and FLAGS.at_eps):
             df = df[df['coverage']==FLAGS.coverage]
             df = df[df['at_eps']==FLAGS.at_eps]
         else:

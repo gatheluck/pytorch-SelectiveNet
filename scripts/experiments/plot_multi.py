@@ -35,8 +35,8 @@ def plot_multi(**kwargs):
     weight_paths = sorted(glob.glob(target_path, recursive=True), key=lambda x: os.path.basename(x))
 
     for weight_path in weight_paths:
-        # skip 'test.csv'
-        if os.path.basename(weight_path) == 'test.csv': continue
+        # skip 'test*.csv'
+        if os.path.basename(weight_path) == 'test*.csv': continue
 
         log_dir = os.path.join(os.path.dirname(weight_path), 'plot')
         os.makedirs(log_dir, exist_ok=True)

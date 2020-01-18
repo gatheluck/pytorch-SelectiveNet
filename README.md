@@ -42,7 +42,7 @@ python experiments/test_multi.py -t ${path_to_root_dir_of_saved_weights} -d cifa
 
 # test multiple weights (including adversarial robustness)
 cd scripts
-python experiments/test_multi_adv.py -t ${path_to_root_dir_of_saved_weights} -d cifar10 --attack pgd --attack_norm linf
+python experiments/test_multi_adv.py -t ${path_to_root_dir_of_saved_weights} -d cifar10 --attack pgd --attack_norm linf --attack_trg_loss both
 ```
 
 ### Plot Results

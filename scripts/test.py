@@ -35,7 +35,7 @@ from selectivenet.evaluator import Evaluator
 @click.option('-d', '--dataset', type=str, required=True)
 @click.option('--dataroot', type=str, default='/home/gatheluck/Scratch/selectivenet/data', help='path to dataset root')
 @click.option('-j', '--num_workers', type=int, default=8)
-@click.option('-N', '--batch_size', type=int, default=128)
+@click.option('-N', '--batch_size', type=int, default=1024)
 @click.option('--normalize', is_flag=True, default=True)
 # loss
 @click.option('--coverage', type=float, required=True)

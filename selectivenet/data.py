@@ -33,7 +33,7 @@ class DatasetBuilder(object):
         input_size = self.DATASET_CONFIG[self.name].input_size
         transform = self._get_trainsform(self.name, input_size, train, normalize)
         if self.name == 'svhn':
-            dataset = torchvision.datasets.SVHN(root=self.root_path, split='train' if self.train else 'test', transform=transform, download=True)
+            dataset = torchvision.datasets.SVHN(root=self.root_path, split='train' if train else 'test', transform=transform, download=True)
         elif self.name == 'cifar10':
             dataset = torchvision.datasets.CIFAR10(root=self.root_path, train=train, transform=transform, download=True)
         else: 

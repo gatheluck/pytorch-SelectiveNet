@@ -33,6 +33,7 @@ EPS = {
 @click.option('--attack_norm', type=str, required=True)
 @click.option('--nb_its', type=int, default=10)
 @click.option('--attack_trg_loss', type=str, required=True)
+@click.option('-s', '--suffix', type=str, default='')
 
 def main(**kwargs):
     test_multi_adv(**kwargs)
@@ -102,7 +103,7 @@ def test_multi_adv(**kwargs):
     run_dir  = '../scripts'
     target_path = os.path.join(FLAGS.target_dir, '**/weight_final*.pth')
     weight_paths = sorted(glob.glob(target_path, recursive=True), key=lambda x: os.path.basename(x))
-    log_path = os.path.join(FLAGS.target_dir, 'test.csv')
+    log_path = os.path.join(FLAGS.target_dir, 'test{}.csv'.format(FLAGS.suffix))
 
     # logging
     logger = Logger(path=log_path, mode='test')

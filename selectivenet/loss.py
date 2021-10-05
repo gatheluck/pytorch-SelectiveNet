@@ -25,10 +25,12 @@ class SelectiveLoss(torch.nn.Module):
             selection_out:  (B, 1)
         """
         # compute emprical coverage (=phi^)
-        emprical_coverage = selection_out.mean() 
+        binary_selection = (selection_out > 0.5).float()
+
+        emprical_coverage = binary_selection.mean()
 
         # compute emprical risk (=r^)
-        emprical_risk = (self.loss_func(prediction_out, target)*selection_out.view(-1)).mean()
+        emprical_risk = (self.loss_func(prediction_out, target)*binary_selection.view(-1)).mean()
         emprical_risk = emprical_risk / emprical_coverage
 
         # compute penulty (=psi)
